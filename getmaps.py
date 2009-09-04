@@ -31,9 +31,9 @@ def convert_coords_to_quadtree_string(x, y, zoomlevel):
     string = ""
     quadrant = "0123"
     for n in range (16 - zoomlevel, -1, -1):
-	xbit = (x >> n) & 1;
+        xbit = (x >> n) & 1;
         ybit = (y >> n) & 1;
-	string += quadrant[xbit + 2 * ybit];
+        string += quadrant[xbit + 2 * ybit];
     return string
 
 def latlon2unit(lat, lon):
@@ -54,17 +54,17 @@ def unit2ztile(munit, zoom):
 def getTiles(startlat, endlat, startlong, endlong, zoom):
     (sux, suy) = latlon2unit (startlat, startlong)
     (eux, euy) = latlon2unit (endlat, endlong)
-
+    
     if eux < sux:
-	x = eux
-	eux = sux
-	sux = x
-
+        x = eux
+        eux = sux
+        sux = x
+    
     if euy < suy:
-	y = euy
-	euy = suy
-	suy = y
-
+        y = euy
+        euy = suy
+        suy = y
+    
     return (range (unit2ztile (sux, zoom), unit2ztile (eux, zoom) + 1),
             range (unit2ztile (suy, zoom), unit2ztile (euy, zoom) + 1))
 
@@ -85,30 +85,29 @@ def tileAdd(db, pixbuf, x, y, zoom):
 # It first checks if the tile needs to be downloaded at all,
 # then downloads it and inserts it into the database.
 def loadTile(db, x, y, zoom, num, total):
-        if (tileExists (db, x, y, zoom)):
-            return
-
-        url = URL % (x, y, zoom - 4)
-
-        print "Downloading tile %d of %d" % (num, total)
-
-        while True:
-            try:
-                tileAdd (db, urllib.urlopen(url), x, y, zoom)
-                break
-            except e:
-                print "Oops! something went wrong downloading '%s': %s" % (url, e.message)
-                print "Trying again..."
+    if (tileExists (db, x, y, zoom)):
+        return
+    
+    url = URL % (x, y, zoom - 4)
+    
+    print "Downloading tile %d of %d" % (num, total)
+    
+    while True:
+        try:
+            tileAdd (db, urllib.urlopen(url), x, y, zoom)
+            break
+        except e:
+            print "Oops! something went wrong downloading '%s': %s" % (url, e.message)
+            print "Trying again..."
 
 
 def main():
     # parse the command-line
     usage = '''%prog [options] <dbfile>
-
+    
 Download images from Google Maps for use with Maemo Mapper.
-
 Try '%prog --help' for a description of all options.'''
-
+    
     parser = OptionParser (usage=usage)
     parser.add_option ("-t", "--start-lat",
                        dest="startlat",  help="start latitude (x)",
@@ -125,16 +124,16 @@ Try '%prog --help' for a description of all options.'''
     parser.add_option ("-z", "--zoom",
                        dest="zoom",      help="zoom level (may be used multiple times)",
                        type="int", action="append")
-
+    
     (options, args) = parser.parse_args ()
-
+    
     if len (args) != 1:
         parser.error ("incorrect number of arguments")
-
+    
     # open a connection to the database
     dbConnection = sqlite3.connect (args[0])
     db = dbConnection.cursor ()
-
+    
     # create the table, failing silently if it already exists
     try:
         db.execute ('''create table maps (
@@ -145,7 +144,7 @@ Try '%prog --help' for a description of all options.'''
             primary key (zoom, tilex, tiley));''')
     except:
         pass
-
+    
     # calculate the number of requested tiles beforehand
     numTiles = 0
     for zoom in options.zoom:
@@ -153,9 +152,9 @@ Try '%prog --help' for a description of all options.'''
                                      options.startlong, options.endlong,
                                      zoom)
         numTiles += len(rangex) * len(rangey)
-
+    
     print "You asked for %d tiles" % (numTiles)
-
+    
     # loop over all zoom levels and retrieve all tiles
     i = 0
     for zoom in options.zoom:
@@ -169,7 +168,7 @@ Try '%prog --help' for a description of all options.'''
                 # force a commit every once in a while
                 if i % 100 == 0:
                     dbConnection.commit ()
-
+    
     # close the connection to the database and trigger a final commit
     db.close ()
     dbConnection.commit ()
